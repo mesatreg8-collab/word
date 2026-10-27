@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Lab AI · Native Speaker Mindset</title>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #666;
+      --red: #c41e3a;
+      --orange: #e67e22;
+      --yellow: #f1c40f;
+      --green: #27ae60;
+      --blue: #2980b9;
+      --purple: #8e44ad;
+      --dark: #2c3e50;
+      --border: #e5e2db;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* Top bar */
+    .topbar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+    }
+
+    .topbar-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      white-space: nowrap;
+    }
+    .logo span { color: var(--red); }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 11px 16px 11px 42px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fafaf8;
+    }
+
+    .search-box input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(41,128,185,0.15);
+      background: white;
+    }
+
+    .search-box .icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .btn {
+      padding: 11px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: white;
+    }
+    .btn-primary:hover { background: #a31830; }
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: var(--dark);
+    }
+    .btn-secondary:hover { background: #e5e5e5; }
+
+    /* Settings panel */
+    .settings {
+      max-width: 860px;
+      margin: 20px auto 0;
+      padding: 0 20px;
+    }
+
+    .settings-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: none;
+    }
+
+    .settings-card.show { display: block; }
+
+    .settings-card h3 {
+      font-size: 15px;
+      margin-bottom: 12px;
+      color: var(--dark);
+    }
+
+    .settings-card input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .settings-card input:focus { border-color: var(--blue); }
+
+    .settings-card .hint {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .settings-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Main content */
+    .main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* Status messages */
+    .status {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      display: none;
+    }
+    .status.show { display: block; }
+
+    .status .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #eee;
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Result card */
+    .result {
+      display: none;
+    }
+    .result.show {
+      display: block;
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-header {
+      display: none; /* replaced by word-head card */
+    }
+
+    .card-header .brand {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .card-header h1 {
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--red);
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .card-header .meta {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    /* Content from AI */
+    .ai-content {
+      background: transparent;
+      padding: 0;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .word-head {
+      background: white;
+      border: 2px solid #3b82f6;
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .word-badge {
+      background: #3b82f6;
+      color: white;
+      font-weight: 700;
+      font-size: 17px;
+      padding: 12px 12px;
+      border-radius: 12px;
+      min-width: 70px;
+      text-align: center;
+      line-height: 1.25;
+      flex-shrink: 0;
+      text-transform: lowercase;
+    }
+
+    .word-head-main { flex: 1; min-width: 0; }
+
+    .word-head .phonetic {
+      font-family: "Times New Roman", Georgia, serif;
+      color: #2563eb;
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    .word-head .pos {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .word-head .gloss {
+      font-size: 14px;
+      color: #1d4ed8;
+      line-height: 1.5;
+    }
+
+    .core-summary {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 14.5px;
+      color: #1e3a5f;
+      line-height: 1.6;
+    }
+
+    .section-block {
+      background: white;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid #94a3b8;
+    }
+
+    .section-block.s01 { border-left-color: #22c55e; }
+    .section-block.s02 { border-left-color: #3b82f6; }
+    .section-block.s03 { border-left-color: #f59e0b; }
+    .section-block.s04 { border-left-color: #a855f7; }
+    .section-block.s05 { border-left-color: #14b8a6; }
+    .section-block.s06 { border-left-color: #ef4444; }
+    .section-block.s07 { border-left-color: #6366f1; }
+
+    .section-block h3 {
+      margin: 0 0 12px 0 !important;
+      font-size: 15px !important;
+      color: var(--dark) !important;
+      font-weight: 700;
+    }
+
+    /* ---- 卡片内部层次 ---- */
+    .sub-item {
+      padding: 10px 0;
+      border-bottom: 1px dashed #e5e7eb;
+    }
+    .sub-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .sub-item:first-child {
+      padding-top: 0;
+    }
+
+    .pair-row {
+      display: block;
+      margin: 6px 0 8px;
+      padding: 0;
+    }
+    .pair-en {
+      font-family: Georgia, "Times New Roman", serif;
+      font-style: italic;
+      font-weight: 600;
+      color: #1e40af;
+      font-size: 14.5px;
+      line-height: 1.5;
+      display: block;
+    }
+    .pair-en-def {
+      font-weight: 400;
+    }
+    .pair-zh {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.5;
+      display: block;
+      margin-top: 2px;
+    }
+
+
+    .sub-label {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 14.5px;
+      margin: 0 0 5px;
+      display: block;
+      font-style: normal;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .sub-desc {
+      color: #334155;
+      font-size: 14px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .sub-en {
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      font-style: italic;
+      color: #1e40af;
+      font-size: 14.5px;
+      display: block;
+      margin: 5px 0 2px;
+      line-height: 1.55;
+    }
+
+    .sub-zh {
+      color: #64748b;
+      font-size: 13.5px;
+      display: block;
+      margin: 0 0 4px;
+      line-height: 1.5;
+      font-style: normal;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .collo-row {
+      display: block;
+      margin: 3px 0;
+      line-height: 1.55;
+    }
+
+    .sub-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #2563eb;
+      background: #eff6ff;
+      padding: 1px 8px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+
+    .sub-collocation {
+      font-weight: 600;
+      color: #0f172a;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 13.5px;
+      font-style: normal;
+    }
+
+    .sub-collocation-zh {
+      color: #64748b;
+      font-size: 13px;
+      margin-left: 6px;
+      font-style: normal;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-weight: 400;
+    }
+
+    .hint-line {
+      color: #b45309;
+      background: #fffbeb;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13.5px;
+      margin-top: 8px;
+      display: block;
+    }
+
+    .ai-content h2, .ai-content h3 {
+      margin: 18px 0 8px;
+      color: var(--dark);
+      font-size: 15px;
+    }
+
+    .ai-content h2:first-child,
+    .ai-content h3:first-child { margin-top: 0; }
+
+    .ai-content p { margin: 0 0 6px 0; }
+
+    .ai-content ul, .ai-content ol {
+      margin: 4px 0 8px;
+      padding-left: 20px;
+    }
+
+    .ai-content li { margin-bottom: 4px; line-height: 1.55; }
+
+    .ai-content strong { color: var(--dark); }
+
+    .ai-content blockquote {
+      background: #f8fafc;
+      border-left: 3px solid #cbd5e1;
+      padding: 8px 12px;
+      margin: 8px 0;
+      border-radius: 0 8px 8px 0;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .ai-content hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+    }
+
+    /* Error */
+    .error-box {
+      background: #fdf2f2;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-top: 20px;
+      display: none;
+      font-size: 14px;
+    }
+    .error-box.show { display: block; }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .topbar-inner { gap: 10px; }
+      .card-header h1 { font-size: 32px; }
+      .ai-content { padding: 20px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">Word <span>Lab</span> AI</div>
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input type="text" id="wordInput" placeholder="输入任意英语单词，例如 accommodate..." autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="searchBtn">生成</button>
+      <button class="btn btn-secondary" id="settingsBtn">设置 Key</button>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="settings">
+    <div class="settings-card" id="settingsCard">
+      <h3>设置 DeepSeek API Key</h3>
+      <div class="hint">
+        Key 只会保存在你自己的浏览器本地，不会上传到任何服务器。<br>
+        请使用以 sk- 开头的 DeepSeek 密钥。
+      </div>
+      <input type="password" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx">
+      <div class="settings-actions">
+        <button class="btn btn-primary" id="saveKeyBtn">保存</button>
+        <button class="btn btn-secondary" id="closeSettingsBtn">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <div class="status" id="statusIdle">
+      <p>输入任意英语单词，点击「生成」即可获得完整语感解析。</p>
+      <p style="margin-top: 8px; font-size: 13px;">首次使用请先点击右上角「设置 Key」填入你的 DeepSeek API Key。</p>
+    </div>
+
+    <div class="status" id="statusLoading">
+      <div class="spinner"></div>
+      <p>正在生成中，请稍候…</p>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="result" id="result">
+      <div class="card-header">
+        <div class="brand">Native Speaker Mindset · Syn English Lab</div>
+        <h1 id="resultWord">—</h1>
+        <div class="meta" id="resultMeta"></div>
+      </div>
+      <div class="ai-content" id="aiContent"></div>
+    </div>
+
+    <div class="footer-note">
+      基于 Cambridge Dictionary 核心释义 + 母语者语感结构 · Powered by DeepSeek
+    </div>
+  </div>
+
+  <script>
+    // ========== 配置 ==========
+    const STORAGE_KEY = 'wordlab_deepseek_key';
+
+    // 系统提示词：强制输出我们约定的结构
+    const SYSTEM_PROMPT = `你是一位英语母语者语感教学专家。输出必须完整、准确，严格覆盖该词在权威词典（剑桥、牛津、朗文）中的主要义项，尤其不能漏掉跨领域的专业义项。
+
+不要开场白、不要结束语。
+
+先输出信息头（各占一行）：
+WORD: 单词大写
+PHONETIC: /音标/
+POS: 词性（中英，如 noun 名词 · verb 动词）
+GLOSS: 用分号分隔的核心中文义项（务必涵盖各主要领域，可到 8 个）
+CORE_SUMMARY: 一句话核心语感总述（若一词多源/多核，说明需分开抓几个概念，不要硬并成一个）
+
+然后按下面 7 个部分输出，标题必须原样保留：
+
+### 01｜CORE LOGIC 核心语感
+
+若该词有多条词源或明显不同的概念核，分开写 3～6 个小点，每个对应一类意思。
+每个小点格式：
+① 小标题（如：大小与规模 / 音阶 / 鳞片与沉积 / 攀爬与扩缩）
+一句话解释。
+英文锚点例子 — 中文
+
+最后可加「记忆关键」或提醒：不同义项可能来自不同词源，不能硬套成一个意思。
+
+### 02｜MEANINGS IN CONTEXT 常见义项
+
+必须完整覆盖主要义项，按词性分组（A. 名词 Noun / B. 动词 Verb）。
+对 scale 这类词，名词至少应覆盖：规模程度、刻度等级、秤、比例尺、鱼鳞/鳞片、水垢沉积、音阶；动词至少应覆盖：扩大缩小、攀登、刮除牙石/水垢 等常见义。
+其他词同理：凡剑桥/牛津列出的常用义项都要写到，专业领域（音乐、医学、商业、科技等）不能省略。
+
+每个义项格式：
+数字 · 中文标签
+英文简短定义
+2～4 个关键搭配 — 中文
+Example
+英文例句。
+中文翻译。
+
+### 03｜COLLOCATIONS 常用搭配
+
+列出 10～18 个高频搭配，覆盖不同义项领域，每行：
+英文搭配
+中文意思
+
+保持紧凑，不必每条都加长例句。
+
+### 04｜SLANG & INFORMAL EXPRESSIONS 俚语与口语
+
+有则列 2～5 个（含 tip the scales、scale up/back 等固定表达）。
+若几乎没有俚语，写明并补充意思接近的口语表达。
+
+### 05｜WORD FAMILY 词族与词义网络
+
+每个同根词独占一行，格式必须严格为：
+单词 (词性) — 中文意思
+
+正确示例：
+implant (verb/noun) — 植入；植入物
+plantation (noun) — 种植园
+transplant (verb/noun) — 移植；移植手术；移植的器官
+
+错误示例（禁止）：
+implant (verb — 植入；noun) —
+transplant (verb — 移植
+noun) — 器官
+词性写在括号里，只用一个破折号连接中文意思，一条绝不能拆成两行。
+
+### 06｜ETYMOLOGY 词源故事
+
+讲清来源与演变。若一词多源（如 scale 的梯子/刻度 vs 鳞片），必须分开说明不同历史路线。
+结尾提醒：词源只是辅助记忆。
+
+### 07｜WORD DISTINCTION 近义词辨析
+
+每组对比单独成块，格式固定：
+单词A vs 单词B
+一句话核心区别（中文）
+Example: 英文例句
+中文：中文翻译
+
+不要把整段对比挤成一行。
+
+强制要求：
+1. 义项要全：跨领域、专业义项（音乐音阶、牙科洁治、商业 scale up 等）不得遗漏
+2. GLOSS 和 02 部分互相呼应，词典里的常用义都要出现
+3. 内容准确，优先剑桥/牛津
+4. 每个小点以 ①②③ 或「1 ·」「A.」开头独占一行；英文例句单独一行（可写 Example: ...）；中文翻译单独一行并写成「中文：...」
+5. 每个英文词组/单词与中文解释必须独占一行，格式：英文 — 中文。禁止用分号把多条挤在同一行
+6. 小点与小点之间空一行，便于阅读
+7. 少用无意义装饰符号；不要输出总结段或无关废话
+8. 不要因为“怕太长”而删掉重要义项`;
+
+    // ========== DOM ==========
+    const wordInput = document.getElementById('wordInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsCard = document.getElementById('settingsCard');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const saveKeyBtn = document.getElementById('saveKeyBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const statusIdle = document.getElementById('statusIdle');
+    const statusLoading = document.getElementById('statusLoading');
+    const errorBox = document.getElementById('errorBox');
+    const result = document.getElementById('result');
+    const resultWord = document.getElementById('resultWord');
+    const resultMeta = document.getElementById('resultMeta');
+    const aiContent = document.getElementById('aiContent');
+
+    // ========== 工具函数 ==========
+    function getApiKey() {
+      return localStorage.getItem(STORAGE_KEY) || '';
+    }
+
+    function setApiKey(key) {
+      localStorage.setItem(STORAGE_KEY, key.trim());
+    }
+
+    function show(el) { el.classList.add('show'); }
+    function hide(el) { el.classList.remove('show'); }
+
+    function hideAllStatus() {
+      hide(statusIdle);
+      hide(statusLoading);
+      hide(errorBox);
+      hide(result);
+    }
+
+    function showError(msg) {
+      hideAllStatus();
+      errorBox.textContent = msg;
+      show(errorBox);
+      show(statusIdle);
+    }
+
+    // 简单的 Markdown → HTML（够用即可）
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function inlineFormat(s) {
+      return escapeHtml(s)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+    }
+
+    function parseHeader(md) {
+      const meta = {};
+      const lines = md.split(/\n/);
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i].trim();
+        const m = line.match(/^(WORD|PHONETIC|POS|GLOSS|CORE_SUMMARY)\s*[:：]\s*(.*)$/i);
+        if (m) {
+          meta[m[1].toUpperCase()] = m[2].trim();
+          i++;
+          continue;
+        }
+        if (/^###\s/.test(line) || /^0[1-7]/.test(line)) break;
+        if (Object.keys(meta).length && line === '') { i++; break; }
+        if (Object.keys(meta).length === 0 && line) break;
+        i++;
+      }
+      return { meta, body: lines.slice(i).join('\n') };
+    }
+
+    function renderBody(md) {
+      const parts = md.split(/(?=^###\s)/m).filter(p => p.trim());
+      if (!parts.length) {
+        return '<div class="section-block"><p>' + inlineFormat(md.trim()).replace(/\n/g, '<br>') + '</p></div>';
+      }
+
+      const LABEL_RE = /^(①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩|[0-9]+\s*[·．.、]|[A-D]\.\s|释义\s*[0-9]|重点|语感重点|记忆关键|语法提醒|提醒|注意|补充)/;
+      const POS_RE = /^(verb|noun|adj|adverb|adjective|v\.|n\.)\)/i;
+
+      function cjkCount(s) { return (s.match(/[\u4e00-\u9fff]/g) || []).length; }
+      function letterCount(s) { return (s.match(/[A-Za-z]/g) || []).length; }
+
+      function isLabel(t) {
+        return LABEL_RE.test(t) || /^(Example|例句)\s*[:：]?/i.test(t);
+      }
+      function isHint(t) {
+        return /^(重点|语感重点|记忆关键|语法提醒|提醒|注意|补充|词源提示)/.test(t)
+          || t.includes('词源只是') || t.includes('不能硬套') || t.includes('只是辅助');
+      }
+
+      // Merge lines broken across parentheses
+      function mergeBrokenLines(lines) {
+        const out = [];
+        for (let i = 0; i < lines.length; i++) {
+          let line = (lines[i] || '').trim();
+          if (!line) { out.push(''); continue; }
+          while (i + 1 < lines.length) {
+            const next = (lines[i + 1] || '').trim();
+            const opens = (line.match(/\(/g) || []).length;
+            const closes = (line.match(/\)/g) || []).length;
+            if (opens > closes && next) {
+              line += ' ' + next;
+              i++;
+              continue;
+            }
+            if (/\([a-z.]+$/i.test(line) && POS_RE.test(next)) {
+              line += ' ' + next;
+              i++;
+              continue;
+            }
+            break;
+          }
+          out.push(line);
+        }
+        return out;
+      }
+
+      // Fix "word (verb — 中文 noun) — 更多"
+      function fixWordFamilyLine(line) {
+        const re = /^([A-Za-z][A-Za-z\-]*)\s*\(\s*(verb|noun|adj|adverb|adjective|v\.|n\.)\s*[—–−\-=＝]\s*(.+?)\s+(verb|noun|adj|adverb|adjective|v\.|n\.)\s*\)\s*[—–−\-=＝]?\s*(.*)$/i;
+        const m = line.match(re);
+        if (m) {
+          let meaning = m[3].trim().replace(/[；;]\s*$/, '');
+          if (m[5] && m[5].trim()) meaning += '；' + m[5].trim();
+          return m[1] + ' (' + m[2] + '/' + m[4] + ') — ' + meaning;
+        }
+        return line;
+      }
+
+      // Expand "en — zh; en — zh" into multiple physical lines BEFORE styling
+      function expandSemicolonPairs(lines) {
+        const out = [];
+        lines.forEach(function(line) {
+          const t = line.trim();
+          if (!t) { out.push(''); return; }
+          // Only expand if it looks like multiple en-zh pairs
+          if (/[;；]/.test(t) && /[A-Za-z]/.test(t) && /[\u4e00-\u9fff]/.test(t) && /[—–−\-=＝]/.test(t)) {
+            const chunks = t.split(/\s*[;；]\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
+            const looksLikePairs = chunks.every(function(ch) {
+              return /[A-Za-z]/.test(ch) && (/[—–−\-=＝]/.test(ch) || /[\u4e00-\u9fff]/.test(ch));
+            });
+            if (looksLikePairs && chunks.length >= 2) {
+              chunks.forEach(function(ch) { out.push(ch); });
+              return;
+            }
+          }
+          out.push(t);
+        });
+        return out;
+      }
+
+      // Core: split one line into EN + ZH (ignore dashes inside parentheses)
+      function splitEnZh(line) {
+        const t = line.trim();
+        let masked = '';
+        let depth = 0;
+        for (let i = 0; i < t.length; i++) {
+          const ch = t[i];
+          if (ch === '(' || ch === '（') depth++;
+          if (ch === ')' || ch === '）') depth = Math.max(0, depth - 1);
+          if (depth > 0 && /[—–−\-~～=＝]/.test(ch)) masked += '·';
+          else masked += ch;
+        }
+        let best = null;
+        const re = /\s*[—–−\-~～=＝]\s*/g;
+        let m;
+        while ((m = re.exec(masked)) !== null) {
+          const left = t.slice(0, m.index).trim();
+          const right = t.slice(m.index + m[0].length).trim();
+          if (letterCount(left) >= 1 && cjkCount(right) >= 1) best = [left, right];
+        }
+        return best;
+      }
+
+      // SIMPLE row: English on top (or left style), Chinese always gray small below
+      function pairRow(en, zh) {
+        let html = '<div class="pair-row">';
+        if (en) html += '<div class="pair-en">' + inlineFormat(en) + '</div>';
+        if (zh) html += '<div class="pair-zh">' + inlineFormat(zh) + '</div>';
+        html += '</div>';
+        return html;
+      }
+
+      function styleLine(line) {
+        let t = fixWordFamilyLine((line || '').trim());
+        if (!t) return '';
+
+        if (/^[—–−\-~～=＝]\s*[\u4e00-\u9fff]/.test(t)) {
+          return pairRow('', t.replace(/^[—–−\-~～=＝]\s*/, ''));
+        }
+        if (/^[A-Za-z].*[—–−\-~～=＝]\s*$/.test(t) && cjkCount(t) === 0) {
+          return pairRow(t.replace(/\s*[—–−\-~～=＝]\s*$/, ''), '');
+        }
+
+        if (isHint(t)) {
+          return '<div class="hint-line">' + inlineFormat(t) + '</div>';
+        }
+        if (/^中文\s*[:：]/.test(t)) {
+          return pairRow('', t.replace(/^中文\s*[:：]\s*/, ''));
+        }
+        if (/^(Example|例句)\s*[:：]?/i.test(t)) {
+          const m = t.match(/^(Example|例句)\s*[:：]?\s*(.*)$/i);
+          let html = '<div class="sub-label">' + inlineFormat(m[1]) + '</div>';
+          const rest = (m[2] || '').trim();
+          if (rest) {
+            const sp = splitEnZh(rest);
+            if (sp) html += pairRow(sp[0], sp[1]);
+            else if (cjkCount(rest) === 0) html += pairRow(rest, '');
+            else html += '<div class="sub-desc">' + inlineFormat(rest) + '</div>';
+          }
+          return html;
+        }
+        if (LABEL_RE.test(t)) {
+          return '<div class="sub-label">' + inlineFormat(t) + '</div>';
+        }
+
+        const sp = splitEnZh(t);
+        if (sp) {
+          // vs comparison with long Chinese explanation
+          if (/vs\.?/i.test(sp[0]) && cjkCount(sp[1]) >= 8 && sp[0].indexOf('/') < 0) {
+            return '<div class="sub-label">' + inlineFormat(sp[0]) + '</div>' +
+              '<div class="pair-zh">' + inlineFormat(sp[1]) + '</div>';
+          }
+          return pairRow(sp[0], sp[1]);
+        }
+
+        // pure English definition line
+        if (letterCount(t) >= 3 && cjkCount(t) === 0) {
+          return '<div class="pair-en pair-en-def">' + inlineFormat(t) + '</div>';
+        }
+        // pure / mostly Chinese
+        if (cjkCount(t) >= 2 && cjkCount(t) >= letterCount(t)) {
+          return '<div class="pair-zh">' + inlineFormat(t) + '</div>';
+        }
+        // mixed without separator: normal desc
+        return '<div class="sub-desc">' + inlineFormat(t) + '</div>';
+      }
+
+      function renderSubLines(lines) {
+        const items = [];
+        let cur = [];
+        lines.forEach(function(raw) {
+          const t = (raw || '').trim();
+          if (!t) {
+            if (cur.length) { items.push(cur); cur = []; }
+            return;
+          }
+          if (isLabel(t) && cur.length) {
+            items.push(cur);
+            cur = [t];
+          } else cur.push(t);
+        });
+        if (cur.length) items.push(cur);
+
+        return items.map(function(group) {
+          let html = '<div class="sub-item">';
+          group.forEach(function(line) { html += styleLine(line); });
+          html += '</div>';
+          return html;
+        }).join('');
+      }
+
+      return parts.map(function(part) {
+        const lines = part.trim().split(/\n/);
+        const titleLine = lines[0].replace(/^###\s*/, '').trim();
+        let bodyLines = lines.slice(1).map(function(l) { return l.trim(); });
+        bodyLines = mergeBrokenLines(bodyLines);
+        bodyLines = expandSemicolonPairs(bodyLines);
+
+        let cls = 'section-block';
+        const num = titleLine.match(/^0?([1-7])/);
+        if (num) cls += ' s0' + num[1];
+
+        const cleaned = [];
+        bodyLines.forEach(function(l) {
+          if (!l) {
+            if (cleaned.length && cleaned[cleaned.length - 1] !== '') cleaned.push('');
+          } else cleaned.push(l);
+        });
+
+        return '<div class="' + cls + '"><h3>' + inlineFormat(titleLine) + '</h3>' +
+          renderSubLines(cleaned) + '</div>';
+      }).join('');
+    }
+
+    function renderContent(md, fallbackWord) {
+      const { meta, body } = parseHeader(md);
+      const word = meta.WORD || fallbackWord || '';
+      const phonetic = meta.PHONETIC || '';
+      const pos = meta.POS || '';
+      const gloss = meta.GLOSS || '';
+      const core = meta.CORE_SUMMARY || '';
+
+      let html = '';
+      if (word || phonetic || gloss) {
+        html += '<div class="word-head">';
+        html += '<div class="word-badge">' + escapeHtml((word || fallbackWord).toLowerCase()) + '</div>';
+        html += '<div class="word-head-main">';
+        if (phonetic) html += '<div class="phonetic">' + escapeHtml(phonetic) + '</div>';
+        if (pos) html += '<div class="pos">' + escapeHtml(pos) + '</div>';
+        if (gloss) html += '<div class="gloss">' + escapeHtml(gloss) + '</div>';
+        html += '</div></div>';
+      }
+      if (core) {
+        html += '<div class="core-summary"><strong>核心语感：</strong>' + escapeHtml(core) + '</div>';
+      }
+      html += renderBody(body || md);
+      return html;
+    }
+
+    function simpleMarkdown(md) {
+      return renderContent(md, '');
+    }
+
+    // ========== 调用 DeepSeek ==========
+    async function generateWord(word) {
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        showError('请先点击「设置 Key」填入你的 DeepSeek API Key。');
+        show(settingsCard);
+        return;
+      }
+
+      hideAllStatus();
+      show(statusLoading);
+      searchBtn.disabled = true;
+
+      try {
+        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: `请解析这个单词：${word}` }
+            ],
+            temperature: 0.7,
+            max_tokens: 4000
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData.error?.message || `请求失败 (${response.status})`;
+          throw new Error(errMsg);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || '生成失败，请重试。';
+
+        // 显示结果
+        resultWord.textContent = word.toUpperCase();
+        resultMeta.textContent = '由 DeepSeek 生成 · 仅供学习参考';
+        aiContent.innerHTML = renderContent(content, word);
+
+        hideAllStatus();
+        show(result);
+
+      } catch (err) {
+        console.error(err);
+        let msg = err.message || '未知错误';
+        if (msg.includes('Incorrect API key') || msg.includes('invalid_api_key')) {
+          msg = 'API Key 无效，请检查后重新设置。';
+        } else if (msg.includes('insufficient_quota')) {
+          msg = '账户额度不足，请检查 DeepSeek 账户余额。';
+        } else if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+          msg = '网络请求失败，可能是跨域或网络问题。请确认网络正常。';
+        }
+        showError(msg);
+      } finally {
+        searchBtn.disabled = false;
+      }
+    }
+
+    // ========== 事件绑定 ==========
+    searchBtn.addEventListener('click', () => {
+      const word = wordInput.value.trim();
+      if (!word) {
+        showError('请输入一个英语单词。');
+        return;
+      }
+      generateWord(word);
+    });
+
+    wordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        searchBtn.click();
+      }
+    });
+
+    settingsBtn.addEventListener('click', () => {
+      apiKeyInput.value = getApiKey();
+      settingsCard.classList.toggle('show');
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      hide(settingsCard);
+    });
+
+    saveKeyBtn.addEventListener('click', () => {
+      const key = apiKeyInput.value.trim();
+      if (!key) {
+        alert('请输入 API Key');
+        return;
+      }
+      if (!key.startsWith('sk-')) {
+        alert('API Key 通常以 sk- 开头，请检查是否正确。');
+        return;
+      }
+      setApiKey(key);
+      hide(settingsCard);
+      alert('DeepSeek API Key 已保存到本地浏览器。');
+    });
+
+    // 初始化
+    if (getApiKey()) {
+      statusIdle.querySelector('p:last-child').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
